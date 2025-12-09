@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabaseClient";
+import "../../styles/today.css";
 
 type Task = {
   id: string;
