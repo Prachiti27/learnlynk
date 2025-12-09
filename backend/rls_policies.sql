@@ -16,8 +16,24 @@ create policy "leads_select_policy"
 on public.leads
 for select
 using (
-  true
   -- TODO: add real RLS logic here, refer to README instructions
+  auth.jwt()->>'role'='admin'
+  OR
+  owner_id = auth.uid()
+  OR
+  team_id in (
+    select ut.team_id
+    from user_teams ut
+    where ut.user_id = auth.uid()
+  )
+);
+
+create policy "leads_insert_policy"
+on public.leads
+for insert
+with check (
+  auth.jwt()->>'role' in ('admin','counselor')
+  AND tenant_id = (auth.jwt()->>'tenant_id')::uuid
 );
 
 -- TODO: add INSERT policy that:

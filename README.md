@@ -158,6 +158,14 @@ Write **8–12 lines** describing how you would implement a Stripe Checkout flow
 
 ---
 
+## Stripe Answer
+
+```
+When a user clicks on pay, the backend creates a Stripe Checkout session and passes the application_id as metadata. Before redirecting the user, I store a payment_request record in the database with status set to pending. The user is then redirected to Stripe’s hosted checkout page to complete the payment. Once the payment is successful, Stripe sends a checkout.session.completed event to my backend. The webhook endpoint validates the Stripe signature to make sure the request is genuine. Using the metadata, I identify the related application and update the payment status to paid. After that, the application stage or timeline is updated accordingly, and payment events are stored for future audit and reconciliation.
+```
+
+---
+
 ## Submission
 
 1. Push your work to a public GitHub repo.  

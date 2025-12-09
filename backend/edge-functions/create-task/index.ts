@@ -52,9 +52,50 @@ serve(async (req: Request) => {
     //   headers: { "Content-Type": "application/json" },
     // });
 
+    if (!application_id || !task_type || !due_at) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields" }),
+        { status: 4000 }
+      );
+    }
+
+    if (!VALID_TYPES.includes(task_type)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid task type" }),
+        { status: 400 }
+      );
+    }
+
+    const dueDate = new Date(due_at);
+
+    if (isNaN(dueDate.getTime()) || dueDate <= new Date()) {
+      return new Response(
+        JSON.stringify({ error: "due_at must be a future date" }),
+        { status: 400 }
+      );
+    }
+
+    const { data, error } = await supabase.from("tasks").insert({
+      related_id: application_id,
+      type: task_type,
+      due_at: dueDate.toISOString(),
+      title: `${task_type} task`,
+      tenant_id: "system"
+    }).select().single();
+
+    if (error) {
+      throw error;
+    }
+
+    await supabase.channel("tasks").send({
+      type: "broadcast",
+      event: "task.created",
+      payload: { task_id: data.id },
+    });
+
     return new Response(
-      JSON.stringify({ error: "Not implemented. Please complete this function." }),
-      { status: 501, headers: { "Content-Type": "application/json" } },
+      JSON.stringify({ success: true, task_id: data.id }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (err) {
     console.error(err);
